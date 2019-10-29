@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">BLEHelper</string>
+    <string name="ble_location_service_required_title">Location service required</string>
+    <string name="ble_location_service_required_content">Location service must be enabled for searching Bluetooth devices.</string>
+    <string name="ble_location_permission_required_title">Location permission required</string>
+    <string name="ble_location_permission_required_message">The app require location permission to scan and identify Bluetooth devices.</string>
+</resources>

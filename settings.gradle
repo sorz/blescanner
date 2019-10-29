@@ -1,0 +1,2 @@
+include ':blescanner'
+rootProject.name='BLE Scanner'
