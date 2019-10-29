@@ -5,10 +5,7 @@ import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
-import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanFilter
-import android.bluetooth.le.ScanResult
-import android.bluetooth.le.ScanSettings
+import android.bluetooth.le.*
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -36,6 +33,21 @@ private const val REQUEST_ENABLE_BT = 32001
 private const val REQUEST_LOCATION_SERVICE = 32002
 private const val PERMISSION_REQUEST_FINE_LOCATION = 32003
 
+/**
+ * Initialize Bluetooth Low Energy and scan BLE devices.
+ *
+ * Usage:
+ *   1. Add [onRequestPermissionsResult] to your [Activity.onRequestPermissionsResult] and
+ *   and [onActivityResult] to the [Activity.onActivityResult];
+ *   2. Call [initialize] to request permissions and enable Bluetooth. If you already check them
+ *   before, step 1 & 2 could be skipped.
+ *   3. Call [startScan] to get [Channel] of [BluetoothDevice]. After you find the device, call
+ *   [stopScan].
+ *
+ *   Do not fire a second [startScan] before the last scanning stopped.
+ *
+ *   Scanning will stop whatever when [Lifecycle] went [Lifecycle.State.DESTROYED].
+ */
 class BLEScanner(
     private val context: Context,
     lifecycleOwner: LifecycleOwner
@@ -59,6 +71,18 @@ class BLEScanner(
     private lateinit var queuedDevice: Channel<BluetoothDevice>
 
 
+    /**
+     * Request necessary permission and switch on Bluetooth.
+     *
+     * 1. Ensure location service is enabled. If not, ask user for it and open the system preference.
+     * 2. Ensure [ACCESS_FINE_LOCATION] is granted, request it if necessary.
+     * 3. Ensure Bluetooth is switched on, request for open if necessary.
+     *
+     * @param activity [onRequestPermissionsResult] and [onActivityResult] must be called on
+     *   [activity].[Activity.onRequestPermissionsResult] and [activity].[Activity.onActivityResult],
+     *   otherwise the method may never return.
+     * @return false if user reject any permission.
+     */
     suspend fun initialize(activity: Activity): Boolean {
         locationServiceEnabled = CompletableDeferred()
         locationPermissionGranted = CompletableDeferred()
@@ -110,6 +134,10 @@ class BLEScanner(
         return done(true)
     }
 
+    /**
+     * Call from [Activity.onRequestPermissionsResult].
+     * @return true if event is processed.
+     */
     fun onRequestPermissionsResult(
         requestCode: Int,
         grantResults: IntArray
@@ -123,6 +151,10 @@ class BLEScanner(
         return false
     }
 
+    /**
+     * Call from [Activity.onActivityResult].
+     * @return true if event is processed.
+     */
     fun onActivityResult(requestCode: Int, resultCode: Int): Boolean {
         when (requestCode) {
             REQUEST_ENABLE_BT -> bluetoothEnabled?.run {
@@ -179,6 +211,14 @@ class BLEScanner(
         }
     }
 
+    /**
+     * Start scanning. Call [stopScan] to stop.
+     *
+     * @param filters see [BluetoothLeScanner.startScan]
+     * @param settings see [BluetoothLeScanner.startScan]
+     * @return [Channel] of result. The same [BluetoothDevice] will never send twice until
+     * [clearSeenDevices] is called.
+     */
     fun startScan(filters: List<ScanFilter>, settings: ScanSettings): Channel<BluetoothDevice> {
         debug { "Start LE scanning" }
         queuedDevice = Channel()
@@ -186,6 +226,10 @@ class BLEScanner(
         return queuedDevice
     }
 
+    /**
+     * Stop scanning. [Channel] returned from [startScan] will be closed.
+     * Automatically be called when [Lifecycle] went [Lifecycle.Event.ON_DESTROY].
+     */
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     fun stopScan() {
         debug("Stop LE scanning")
