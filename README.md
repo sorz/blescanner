@@ -27,13 +27,10 @@ class MainActivity : AppCompatActivity() {
         // ...
         lifecycleScope.launchWhenCreated {
             if (bleScanner.initialize(this@MainActivity)) {
-                // Scan devices
                 val filters = listOf(/* ... */)
-                val settings = ScanSettings.Builder()
-                    // ...
-                    .build()
+                val settings = ScanSettings.Builder().build()
                 for device in bleScanner.startScan(filters, settings) {
-                    // ...
+                    // ... device found
                     bleScanner.stopScan()
                 }
             } else {
@@ -47,12 +44,12 @@ class MainActivity : AppCompatActivity() {
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
-        if (!bleFinder.onRequestPermissionsResult(requestCode, grantResults))
+        if (!bleScanner.onRequestPermissionsResult(requestCode, grantResults))
             super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (!bleFinder.onActivityResult(requestCode, resultCode))
+        if (!bleScanner.onActivityResult(requestCode, resultCode))
             super.onActivityResult(requestCode, resultCode, data)
     }
 }
