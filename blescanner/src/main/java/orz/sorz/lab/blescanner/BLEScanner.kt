@@ -15,6 +15,7 @@ import android.provider.Settings
 import androidx.core.app.ActivityCompat.*
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.checkSelfPermission
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -78,12 +79,15 @@ class BLEScanner(
      * 2. Ensure [ACCESS_FINE_LOCATION] is granted, request it if necessary.
      * 3. Ensure Bluetooth is switched on, request for open if necessary.
      *
-     * @param activity [onRequestPermissionsResult] and [onActivityResult] must be called on
-     *   [activity].[Activity.onRequestPermissionsResult] and [activity].[Activity.onActivityResult],
-     *   otherwise the method may never return.
+     * @param activity If fragment is null, [onRequestPermissionsResult] and [onActivityResult] must
+     *   be called on [activity].[Activity.onRequestPermissionsResult] and
+     *   [activity].[Activity.onActivityResult], otherwise the method may never return.
+     * @param fragment If [onRequestPermissionsResult] and [onActivityResult] is called on fragment
+     *   rather than the activity, set the fragment here.
+     *
      * @return false if user reject any permission.
      */
-    suspend fun initialize(activity: Activity): Boolean {
+    suspend fun initialize(activity: Activity, fragment: Fragment? = null): Boolean {
         locationServiceEnabled = CompletableDeferred()
         locationPermissionGranted = CompletableDeferred()
         bluetoothEnabled = CompletableDeferred()
@@ -102,7 +106,10 @@ class BLEScanner(
                 title(R.string.ble_location_service_required_title)
                 message(R.string.ble_location_service_required_content)
                 positiveButton {
-                    startActivityForResult(activity, intent, REQUEST_LOCATION_SERVICE, null)
+                    if (fragment == null)
+                        startActivityForResult(activity, intent, REQUEST_LOCATION_SERVICE, null)
+                    else
+                        fragment.startActivityForResult(intent, REQUEST_LOCATION_SERVICE)
                 }
                 onCancel { locationServiceEnabled?.complete(false) }
             }
@@ -120,14 +127,20 @@ class BLEScanner(
                 }.awaitDismiss()
             }
             // Request permission
-            requestPermissions(activity, arrayOf(ACCESS_FINE_LOCATION), PERMISSION_REQUEST_FINE_LOCATION)
+            if (fragment == null)
+                requestPermissions(activity, arrayOf(ACCESS_FINE_LOCATION), PERMISSION_REQUEST_FINE_LOCATION)
+            else
+                fragment.requestPermissions(arrayOf(ACCESS_FINE_LOCATION), PERMISSION_REQUEST_FINE_LOCATION)
             if (locationPermissionGranted?.await() == false) return done()
         }
 
         // Enable BLE
         bluetoothAdapter.takeIf { it.isDisabled }?.apply {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            startActivityForResult(activity, enableBtIntent, REQUEST_ENABLE_BT, null)
+            if (fragment == null)
+                startActivityForResult(activity, enableBtIntent, REQUEST_ENABLE_BT, null)
+            else
+                fragment.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
             if (bluetoothEnabled?.await() == false) return done()
         }
 
