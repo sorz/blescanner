@@ -12,6 +12,10 @@ This library helps you:
 All are done with Kotlin's coroutines (suspend fun), and lifecycle aware.
 No more messy callbacks.
 
+
+See [sorz/gattkt](https://github.com/sorz/gattkt) for the library that play
+GATT server with Kotlin coroutines.
+
 ## Install
 
 - Add [JitPack](https://jitpack.io/) to your build file.
