@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="orz.sorz.lab.blescanner">
+    package="org.sorz.lab.blescanner">
     <uses-permission
         android:name="android.permission.ACCESS_FINE_LOCATION"
         android:required="true" />

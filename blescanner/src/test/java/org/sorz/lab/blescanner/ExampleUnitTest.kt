@@ -1,4 +1,4 @@
-package orz.sorz.lab.blescanner
+package org.sorz.lab.blescanner
 
 import org.junit.Test
 

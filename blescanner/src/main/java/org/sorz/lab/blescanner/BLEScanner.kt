@@ -1,4 +1,4 @@
-package orz.sorz.lab.blescanner
+package org.sorz.lab.blescanner
 
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.app.Activity
