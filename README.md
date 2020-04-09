@@ -21,6 +21,16 @@ GATT server with Kotlin coroutines.
 - Add [JitPack](https://jitpack.io/) to your build file.
 - Add `implementation 'com.github.sorz:blescanner:{VERSION}`
 
+## Usage
+- Create `BLEScanner` instance with `Context` and `LifecycleOwner`
+- Add `BLEScanner.onRequestPermissionsResult()` call in your `Activity.onRequestPermissionsResult()`
+  or `Fragment.onRequestPermissionsResult()`
+- Add `BLEScanner.onActivityResult()` call in your `Activity.onActivityResult()`
+  or `Fragment.onActivityResult()`
+- Call `BLEScanner.initialize()` before `BLEScanner.startScan()`
+
+`BLEScanner.initialize()` will return `false` if user reject any necessary permission. 
+
 ## Example
 
 ```kotlin
@@ -30,6 +40,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // ...
         lifecycleScope.launchWhenCreated {
+            // If you are in a fragment, pass both the activity and
+            // the fragment to initialize().
             if (bleScanner.initialize(this@MainActivity)) {
                 val filters = listOf(/* ... */)
                 val settings = ScanSettings.Builder().build()
