@@ -25,9 +25,7 @@ import com.afollestad.materialdialogs.callbacks.onCancel
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.sendBlocking
-import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.debug
-import org.jetbrains.anko.warn
+import mu.KotlinLogging
 
 
 private const val REQUEST_ENABLE_BT = 32001
@@ -52,7 +50,8 @@ private const val PERMISSION_REQUEST_FINE_LOCATION = 32003
 class BLEScanner(
     private val context: Context,
     lifecycleOwner: LifecycleOwner
-): LifecycleObserver, AnkoLogger {
+): LifecycleObserver {
+    private val logger = KotlinLogging.logger {}
     private var locationServiceEnabled: CompletableDeferred<Boolean>? = null
     private var locationPermissionGranted: CompletableDeferred<Boolean>? = null
     private var bluetoothEnabled: CompletableDeferred<Boolean>? = null
@@ -208,17 +207,17 @@ class BLEScanner(
 
     private val leScanCallback = object : ScanCallback() {
         override fun onBatchScanResults(results: MutableList<ScanResult>) {
-            debug("LE batch scan result $results")
+            logger.debug { "LE batch scan result $results" }
             results.forEach { onNewDeviceFound(it.device) }
         }
 
         override fun onScanResult(callbackType: Int, result: ScanResult) {
-            debug("LE scan result $callbackType $result")
+            logger.debug { "LE scan result $callbackType $result" }
             onNewDeviceFound(result.device)
         }
 
         override fun onScanFailed(errorCode: Int) {
-            warn("LE scan failed $errorCode")
+            logger.warn("LE scan failed $errorCode")
             if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED))
                 queuedDevice.close(ScanFailException(errorCode))
         }
@@ -233,7 +232,7 @@ class BLEScanner(
      * [clearSeenDevices] is called.
      */
     fun startScan(filters: List<ScanFilter>, settings: ScanSettings): Channel<BluetoothDevice> {
-        debug { "Start LE scanning" }
+        logger.debug("Start LE scanning")
         queuedDevice = Channel()
         bluetoothLeScanner.startScan(filters, settings, leScanCallback)
         return queuedDevice
@@ -245,7 +244,7 @@ class BLEScanner(
      */
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     fun stopScan() {
-        debug("Stop LE scanning")
+        logger.debug("Stop LE scanning")
         bluetoothLeScanner.stopScan(leScanCallback)
         clearSeenDevices()
         if (::queuedDevice.isInitialized)
