@@ -226,12 +226,15 @@ class BLEScanner(
     /**
      * Start scanning. Call [stopScan] to stop.
      *
-     * @param filters see [BluetoothLeScanner.startScan]
+     * @param filters see [BluetoothLeScanner.startScan], default to no filter (empty list)
      * @param settings see [BluetoothLeScanner.startScan]
      * @return [Channel] of result. The same [BluetoothDevice] will never send twice until
      * [clearSeenDevices] is called.
      */
-    fun startScan(filters: List<ScanFilter>, settings: ScanSettings): Channel<BluetoothDevice> {
+    fun startScan(
+        filters: List<ScanFilter> = listOf(),
+        settings: ScanSettings = ScanSettings.Builder().build()
+    ): Channel<BluetoothDevice> {
         logger.debug("Start LE scanning")
         queuedDevice = Channel()
         bluetoothLeScanner.startScan(filters, settings, leScanCallback)
