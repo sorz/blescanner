@@ -248,7 +248,9 @@ class BLEScanner(
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     fun stopScan() {
         logger.debug("Stop LE scanning")
-        bluetoothLeScanner.stopScan(leScanCallback)
+        if (bluetoothAdapter.isEnabled)
+            // Avoid throwing IllegalStateException
+            bluetoothLeScanner.stopScan(leScanCallback)
         clearSeenDevices()
         if (::queuedDevice.isInitialized)
             queuedDevice.close()
